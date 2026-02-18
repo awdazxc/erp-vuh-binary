@@ -1,18 +1,30 @@
 name: Install VUH
 description: Install VUH globally using official installer
 
+inputs:
+  version:
+    description: "VUH version, tag, branch or commit (example: v1.2.3)"
+    required: false
+    default: "main"
+
 runs:
   using: composite
   steps:
     - name: Download installer and components
       shell: bash
       run: |
+        VERSION="${{ inputs.version }}"
+
+        echo "Downloading VUH version: $VERSION"
+
         curl -L -o installer.sh \
-          https://raw.githubusercontent.com/Greewil/version-update-helper/main/installer.sh
+          "https://raw.githubusercontent.com/Greewil/version-update-helper/${VERSION}/installer.sh"
+
         curl -L -o vuh.sh \
-          https://raw.githubusercontent.com/Greewil/version-update-helper/main/vuh.sh
+          "https://raw.githubusercontent.com/Greewil/version-update-helper/${VERSION}/vuh.sh"
+
         curl -L -o vuh-completion.sh \
-          https://raw.githubusercontent.com/Greewil/version-update-helper/main/vuh-completion.sh
+          "https://raw.githubusercontent.com/Greewil/version-update-helper/${VERSION}/vuh-completion.sh"
 
         chmod +x installer.sh
         chmod +x vuh.sh

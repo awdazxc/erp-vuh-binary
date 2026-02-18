@@ -1,37 +1,38 @@
 name: Install VUH
-description: Install VUH globally using official installer
+description: Install VUH from GitHub release binary
 
 inputs:
   version:
-    description: "VUH version(example: v1.2.3)"
+    description: "VUH release tag (example: v2.12). If empty — latest release will be installed."
     required: false
-    default: "main"
+    default: ""
 
 runs:
   using: composite
   steps:
-    - name: Download installer and components
+    - name: Determine version
+      id: resolve_version
       shell: bash
       run: |
-        VERSION="${{ inputs.version }}"
+        if [ -z "${{ inputs.version }}" ]; then
+          echo "No version provided. Fetching latest release..."
+          LATEST=$(curl -s https://api.github.com/repos/Greewil/version-update-helper/releases/latest | grep tag_name | cut -d '"' -f 4)
+          echo "version=$LATEST" >> $GITHUB_OUTPUT
+        else
+          echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+        fi
 
-        echo "Downloading VUH from tag/branch/commit: $VERSION"
-
-        curl -L -o installer.sh \
-          "https://raw.githubusercontent.com/Greewil/version-update-helper/${VERSION}/installer.sh"
-
-        curl -L -o vuh.sh \
-          "https://raw.githubusercontent.com/Greewil/version-update-helper/${VERSION}/vuh.sh"
-
-        curl -L -o vuh-completion.sh \
-          "https://raw.githubusercontent.com/Greewil/version-update-helper/${VERSION}/vuh-completion.sh"
-
-        chmod +x installer.sh
-        chmod +x vuh.sh
-
-    - name: Install VUH
+    - name: Download VUH binary
       shell: bash
-      run: sudo ./installer.sh -d || true
+      run: |
+        VERSION="${{ steps.resolve_version.outputs.version }}"
+        echo "Installing VUH version: $VERSION"
+
+        curl -f -L -o vuh \
+          "https://github.com/Greewil/version-update-helper/releases/download/${VERSION}/vuh-linux"
+
+        chmod +x vuh
+        sudo mv vuh /usr/local/bin/vuh
 
     - name: Verify VUH installation
       shell: bash

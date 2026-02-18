@@ -1,17 +1,22 @@
 name: Install VUH
-description: Install VUH globally using installer.sh
+description: Install VUH globally using official installer
 
 runs:
   using: composite
   steps:
-    - name: Download installer
+    - name: Download installer and components
       shell: bash
       run: |
         curl -L -o installer.sh \
           https://raw.githubusercontent.com/Greewil/version-update-helper/main/installer.sh
+        curl -L -o vuh.sh \
+          https://raw.githubusercontent.com/Greewil/version-update-helper/main/vuh.sh
+        curl -L -o vuh-completion.sh \
+          https://raw.githubusercontent.com/Greewil/version-update-helper/main/vuh-completion.sh
+
         chmod +x installer.sh
+        chmod +x vuh.sh
 
     - name: Install VUH
       shell: bash
-      run: |
-        sudo ./installer.sh -d
+      run: sudo ./installer.sh -d

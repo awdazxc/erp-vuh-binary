@@ -3,7 +3,7 @@ description: Install VUH globally using official installer
 
 inputs:
   version:
-    description: "VUH version, tag, branch or commit (example: v1.2.3)"
+    description: "VUH version(example: v1.2.3)"
     required: false
     default: "main"
 
@@ -15,7 +15,7 @@ runs:
       run: |
         VERSION="${{ inputs.version }}"
 
-        echo "Downloading VUH version: $VERSION"
+        echo "Downloading VUH from tag/branch/commit: $VERSION"
 
         curl -L -o installer.sh \
           "https://raw.githubusercontent.com/Greewil/version-update-helper/${VERSION}/installer.sh"

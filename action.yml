@@ -1,82 +1,33 @@
 name: Install VUH
-description: Install VUH from GitHub release archives
-
-inputs:
-  version:
-    description: "VUH release tag (example: v2.12). If empty — latest release will be installed."
-    required: false
-    default: ""
+description: Install VUH from main branch
 
 runs:
   using: composite
   steps:
-    - name: Determine version
-      id: resolve_version
+    - name: Download installer and components
       shell: bash
       run: |
-        if [ -z "${{ inputs.version }}" ]; then
-          echo "No version provided. Fetching latest release..."
-          VERSION=$(curl -s https://api.github.com/repos/Greewil/version-update-helper/releases/latest | grep tag_name | cut -d '"' -f 4)
-        else
-          VERSION="${{ inputs.version }}"
-        fi
+        echo "Downloading VUH from main branch..."
 
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        curl -L -o installer.sh \
+          "https://raw.githubusercontent.com/Greewil/version-update-helper/main/installer.sh"
 
-    - name: Fetch release assets
-      id: assets
+        curl -L -o vuh.sh \
+          "https://raw.githubusercontent.com/Greewil/version-update-helper/main/vuh.sh"
+
+        curl -L -o vuh-completion.sh \
+          "https://raw.githubusercontent.com/Greewil/version-update-helper/main/vuh-completion.sh"
+
+        chmod +x installer.sh
+        chmod +x vuh.sh
+
+    - name: Install VUH
+      shell: bash
+      run: sudo ./installer.sh -d || true
+
+    - name: Verify VUH installation
       shell: bash
       run: |
-        VERSION="${{ steps.resolve_version.outputs.version }}"
-        ASSETS=$(curl -s https://api.github.com/repos/Greewil/version-update-helper/releases/tags/$VERSION | grep browser_download_url | cut -d '"' -f 4)
-
-        echo "assets<<EOF" >> $GITHUB_OUTPUT
-        echo "$ASSETS" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
-
-    - name: Select archive for OS
-      id: select
-      shell: bash
-      run: |
-        OS="$RUNNER_OS"
-        ASSETS="${{ steps.assets.outputs.assets }}"
-
-        if [[ "$OS" == "Linux" ]]; then
-          FILE=$(echo "$ASSETS" | grep -i linux | head -n 1)
-        elif [[ "$OS" == "macOS" ]]; then
-          FILE=$(echo "$ASSETS" | grep -i mac | head -n 1)
-        else
-          FILE=$(echo "$ASSETS" | grep -i win | head -n 1)
-        fi
-
-        if [ -z "$FILE" ]; then
-          echo "No suitable archive found for OS: $OS"
-          exit 1
-        fi
-
-        echo "file=$FILE" >> $GITHUB_OUTPUT
-
-    - name: Download archive
-      shell: bash
-      run: |
-        FILE="${{ steps.select.outputs.file }}"
-        echo "Downloading: $FILE"
-        curl -f -L -o vuh-archive "$FILE"
-
-    - name: Extract and install
-      shell: bash
-      run: |
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          unzip vuh-archive
-          mv vuh.exe /usr/local/bin/vuh.exe
-        else
-          tar -xf vuh-archive
-          chmod +x vuh
-          sudo mv vuh /usr/local/bin/vuh
-        fi
-
-    - name: Verify installation
-      shell: bash
-      run: |
+        echo "Checking VUH installation..."
         which vuh || { echo "vuh not found in PATH"; exit 1; }
         vuh -v

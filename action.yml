@@ -1,20 +1,17 @@
-name: VUH CLI
-description: Run VUH script from the original repository
-
-inputs:
-  args:
-    description: Arguments passed to vuh.sh
-    required: true
+name: Install VUH
+description: Install VUH globally using installer.sh
 
 runs:
   using: composite
   steps:
-    - name: Download VUH
+    - name: Download installer
       shell: bash
       run: |
-        curl -L -o vuh.sh https://raw.githubusercontent.com/Greewil/version-update-helper/main/vuh.sh
-        chmod +x vuh.sh
+        curl -L -o installer.sh \
+          https://raw.githubusercontent.com/Greewil/version-update-helper/main/installer.sh
+        chmod +x installer.sh
 
-    - name: Run VUH
+    - name: Install VUH
       shell: bash
-      run: ./vuh.sh ${{ inputs.args }}
+      run: |
+        sudo ./installer.sh

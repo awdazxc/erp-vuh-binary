@@ -1,0 +1,20 @@
+name: VUH CLI
+description: Run VUH script from the original repository
+
+inputs:
+  args:
+    description: Arguments passed to vuh.sh
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download VUH
+      shell: bash
+      run: |
+        curl -L -o vuh.sh https://raw.githubusercontent.com/Greewil/version-update-helper/main/vuh.sh
+        chmod +x vuh.sh
+
+    - name: Run VUH
+      shell: bash
+      run: ./vuh.sh ${{ inputs.args }}

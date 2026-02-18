@@ -16,35 +16,50 @@ runs:
       run: |
         if [ -z "${{ inputs.version }}" ]; then
           echo "No version provided. Fetching latest release..."
-          LATEST=$(curl -s https://api.github.com/repos/Greewil/version-update-helper/releases/latest | grep tag_name | cut -d '"' -f 4)
-          echo "version=$LATEST" >> $GITHUB_OUTPUT
+          VERSION=$(curl -s https://api.github.com/repos/Greewil/version-update-helper/releases/latest | grep tag_name | cut -d '"' -f 4)
         else
-          echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          VERSION="${{ inputs.version }}"
         fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-    - name: Detect OS
-      id: detect_os
+    - name: Fetch release assets
+      id: assets
       shell: bash
       run: |
-        if [[ "$RUNNER_OS" == "Linux" ]]; then
-          echo "archive=vuh-linux.tar.gz" >> $GITHUB_OUTPUT
-        elif [[ "$RUNNER_OS" == "macOS" ]]; then
-          echo "archive=vuh-macos.tar.gz" >> $GITHUB_OUTPUT
+        VERSION="${{ steps.resolve_version.outputs.version }}"
+        ASSETS=$(curl -s https://api.github.com/repos/Greewil/version-update-helper/releases/tags/$VERSION | grep browser_download_url | cut -d '"' -f 4)
+        echo "assets<<EOF" >> $GITHUB_OUTPUT
+        echo "$ASSETS" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Select archive for OS
+      id: select
+      shell: bash
+      run: |
+        OS="$RUNNER_OS"
+        ASSETS="${{ steps.assets.outputs.assets }}"
+
+        if [[ "$OS" == "Linux" ]]; then
+          FILE=$(echo "$ASSETS" | grep -i linux | head -n 1)
+        elif [[ "$OS" == "macOS" ]]; then
+          FILE=$(echo "$ASSETS" | grep -i mac | head -n 1)
         else
-          echo "archive=vuh-windows.zip" >> $GITHUB_OUTPUT
+          FILE=$(echo "$ASSETS" | grep -i win | head -n 1)
         fi
+
+        if [ -z "$FILE" ]; then
+          echo "No suitable archive found for OS: $OS"
+          exit 1
+        fi
+
+        echo "file=$FILE" >> $GITHUB_OUTPUT
 
     - name: Download archive
       shell: bash
       run: |
-        VERSION="${{ steps.resolve_version.outputs.version }}"
-        ARCHIVE="${{ steps.detect_os.outputs.archive }}"
-
-        echo "Installing VUH version: $VERSION"
-        echo "Downloading archive: $ARCHIVE"
-
-        curl -f -L -o vuh-archive \
-          "https://github.com/Greewil/version-update-helper/releases/download/${VERSION}/${ARCHIVE}"
+        FILE="${{ steps.select.outputs.file }}"
+        echo "Downloading: $FILE"
+        curl -f -L -o vuh-archive "$FILE"
 
     - name: Extract and install
       shell: bash
@@ -53,7 +68,7 @@ runs:
           unzip vuh-archive
           mv vuh.exe /usr/local/bin/vuh.exe
         else
-          tar -xzf vuh-archive
+          tar -xf vuh-archive
           chmod +x vuh
           sudo mv vuh /usr/local/bin/vuh
         fi
@@ -61,6 +76,5 @@ runs:
     - name: Verify installation
       shell: bash
       run: |
-        echo "Checking VUH installation..."
         which vuh || { echo "vuh not found in PATH"; exit 1; }
         vuh -v

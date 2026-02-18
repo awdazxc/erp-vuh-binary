@@ -14,4 +14,4 @@ runs:
     - name: Install VUH
       shell: bash
       run: |
-        sudo ./installer.sh
+        sudo ./installer.sh -d

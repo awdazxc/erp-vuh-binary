@@ -1,5 +1,5 @@
 name: Install VUH
-description: Install VUH from GitHub release binary
+description: Install VUH from GitHub release archives
 
 inputs:
   version:
@@ -22,19 +22,43 @@ runs:
           echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
         fi
 
-    - name: Download VUH binary
+    - name: Detect OS
+      id: detect_os
+      shell: bash
+      run: |
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          echo "archive=vuh-linux.tar.gz" >> $GITHUB_OUTPUT
+        elif [[ "$RUNNER_OS" == "macOS" ]]; then
+          echo "archive=vuh-macos.tar.gz" >> $GITHUB_OUTPUT
+        else
+          echo "archive=vuh-windows.zip" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Download archive
       shell: bash
       run: |
         VERSION="${{ steps.resolve_version.outputs.version }}"
+        ARCHIVE="${{ steps.detect_os.outputs.archive }}"
+
         echo "Installing VUH version: $VERSION"
+        echo "Downloading archive: $ARCHIVE"
 
-        curl -f -L -o vuh \
-          "https://github.com/Greewil/version-update-helper/releases/download/${VERSION}/vuh-linux"
+        curl -f -L -o vuh-archive \
+          "https://github.com/Greewil/version-update-helper/releases/download/${VERSION}/${ARCHIVE}"
 
-        chmod +x vuh
-        sudo mv vuh /usr/local/bin/vuh
+    - name: Extract and install
+      shell: bash
+      run: |
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          unzip vuh-archive
+          mv vuh.exe /usr/local/bin/vuh.exe
+        else
+          tar -xzf vuh-archive
+          chmod +x vuh
+          sudo mv vuh /usr/local/bin/vuh
+        fi
 
-    - name: Verify VUH installation
+    - name: Verify installation
       shell: bash
       run: |
         echo "Checking VUH installation..."

@@ -1,22 +1,28 @@
 name: Install VUH
-description: Install VUH from main branch
+description: Install VUH from tag using raw files
+
+inputs:
+  version:
+    description: "VUH release tag (example: v2.12.1)"
+    required: true
 
 runs:
   using: composite
   steps:
-    - name: Download installer and components
+    - name: Download VUH files from tag
       shell: bash
       run: |
-        echo "Downloading VUH from main branch..."
+        VERSION="${{ inputs.version }}"
+        echo "Installing VUH from tag: $VERSION"
 
-        curl -L -o installer.sh \
-          "https://raw.githubusercontent.com/Greewil/version-update-helper/main/installer.sh"
+        curl -f -L -o installer.sh \
+          "https://raw.githubusercontent.com/Greewil/version-update-helper/refs/tags/${VERSION}/installer.sh"
 
-        curl -L -o vuh.sh \
-          "https://raw.githubusercontent.com/Greewil/version-update-helper/main/vuh.sh"
+        curl -f -L -o vuh.sh \
+          "https://raw.githubusercontent.com/Greewil/version-update-helper/refs/tags/${VERSION}/vuh.sh"
 
-        curl -L -o vuh-completion.sh \
-          "https://raw.githubusercontent.com/Greewil/version-update-helper/main/vuh-completion.sh"
+        curl -f -L -o vuh-completion.sh \
+          "https://raw.githubusercontent.com/Greewil/version-update-helper/refs/tags/${VERSION}/vuh-completion.sh"
 
         chmod +x installer.sh
         chmod +x vuh.sh
@@ -28,6 +34,5 @@ runs:
     - name: Verify VUH installation
       shell: bash
       run: |
-        echo "Checking VUH installation..."
         which vuh || { echo "vuh not found in PATH"; exit 1; }
         vuh -v

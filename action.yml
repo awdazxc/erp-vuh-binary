@@ -3,7 +3,7 @@ description: Install VUH from tag using raw files
 
 inputs:
   version:
-    description: "VUH release tag (example: v2.12.1)"
+    description: "VUH release tag (example: v2.13.0 or 2.13.0)"
     required: true
 
 runs:
@@ -13,6 +13,7 @@ runs:
       shell: bash
       run: |
         VERSION="${{ inputs.version }}"
+        if [[ $VERSION != v* ]]; then VERSION="v$VERSION"; fi
         echo "Installing VUH from tag: $VERSION"
 
         curl -f -L -o installer.sh \

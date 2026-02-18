@@ -20,6 +20,7 @@ runs:
         else
           VERSION="${{ inputs.version }}"
         fi
+
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Fetch release assets
@@ -28,6 +29,7 @@ runs:
       run: |
         VERSION="${{ steps.resolve_version.outputs.version }}"
         ASSETS=$(curl -s https://api.github.com/repos/Greewil/version-update-helper/releases/tags/$VERSION | grep browser_download_url | cut -d '"' -f 4)
+
         echo "assets<<EOF" >> $GITHUB_OUTPUT
         echo "$ASSETS" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT

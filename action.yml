@@ -11,6 +11,7 @@ outputs:
     description: "Installed VUH version"
     value: ${{ steps.vuh_version.outputs.local-version }}
 
+
 runs:
   using: composite
   steps:

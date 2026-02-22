@@ -53,6 +53,6 @@ runs:
       id: vuh_version
       shell: bash
       run: |
-        LV=$(vuh lv | tail -n 1 | cut -d' ' -f2)
+        LV=$(vuh lv)
         echo "local-version=$LV" >> "$GITHUB_OUTPUT"
 

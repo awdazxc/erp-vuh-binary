@@ -47,12 +47,12 @@ runs:
       shell: bash
       run: |
         which vuh || { echo "vuh not found in PATH"; exit 1; }
-        vuh -v
+            vuh -v
 
     - name: Get local version
       id: vuh_version
       shell: bash
       run: |
-        LV=$(vuh lv)
+        LV=$(vuh lv | tail -n 1)
         echo "local-version=$LV" >> "$GITHUB_OUTPUT"
 
